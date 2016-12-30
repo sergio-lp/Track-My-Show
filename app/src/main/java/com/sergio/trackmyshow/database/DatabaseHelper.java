@@ -17,6 +17,7 @@ import com.sergio.trackmyshow.models.tmdb.SeasonInfo;
 import com.sergio.trackmyshow.models.tmdb.TVShow;
 import com.sergio.trackmyshow.models.tmdb.TVShowSearch;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
@@ -217,6 +218,36 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.query(false, TV_SHOWS, null, "show_id = ?", args, null, null, null, null);
     }
 
+    /**
+     * String sqlSeasons = "CREATE TABLE " + SEASONS + "(season_id int primary key, number int not null," +
+     * " air_date text, poster_path text, episode_count int, name text, overview text, show_id int," +
+     * " FOREIGN KEY (show_id) REFERENCES " + TV_SHOWS + "(show_id));";
+     **/
+
+    public List<Season> selectSeasons(int tvId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String[] args = {Integer.toString(tvId)};
+        Cursor c = db.query(SEASONS, null, "show_id = ?", args, null, null, null);
+
+        List<Season> seasonList = new ArrayList<>();
+        if (c.getCount() >= 1) {
+            while (c.moveToNext()) {
+                int id = c.getInt(0);
+                int number = c.getInt(1);
+                String airDate = c.getString(2);
+                String posterPath = c.getString(3);
+                int episodeCount = c.getInt(4);
+                String name = c.getString(5);
+                String overview = c.getString(6);
+
+                Season s = new Season(id, number, airDate, posterPath, episodeCount, name);
+                seasonList.add(s);
+            }
+        }
+        c.close();
+        return seasonList;
+    }
+
     public boolean getEpisodeStatus(Episode e, int seasonId) {
         SQLiteDatabase db = this.getWritableDatabase();
         String[] args = {Integer.toString(seasonId), Integer.toString(e.getNumber())};
@@ -237,5 +268,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return db.update(EPISODES, cv, "ep_num = ? and season_id = ?", args);
 
+    }
+
+    public int deleteTvShow(int id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String args[] = {Integer.toString(id)};
+        return db.delete(TV_SHOWS, "show_id = ?", args);
     }
 }

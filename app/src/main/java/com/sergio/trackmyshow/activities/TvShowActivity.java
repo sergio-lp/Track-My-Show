@@ -27,10 +27,9 @@ import com.sergio.trackmyshow.api.tmdb.TMDBService;
 import com.sergio.trackmyshow.models.tmdb.Season;
 import com.sergio.trackmyshow.models.tmdb.TVShow;
 import com.sergio.trackmyshow.models.tmdb.TVShowSearch;
+import com.sergio.trackmyshow.util.DBUtil;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -42,6 +41,7 @@ public class TvShowActivity extends AppCompatActivity {
     private TextView tvOverview, tvRelease, tvGenres, tvStatus;
     private RecyclerView rvSeasons;
     private ProgressBar mProgressBar;
+    private TVShowSearch mTVShowSearch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,10 +66,16 @@ public class TvShowActivity extends AppCompatActivity {
         rvSeasons.setVisibility(View.INVISIBLE);
         addProgressBar();
 
-        TVShowSearch ts = getIntent().getExtras().getParcelable("TVShowSearch");
-        if (ts != null) {
+        Bundle extras = getIntent().getExtras();
+        TVShowSearch ts = extras.getParcelable("TVShowSearch");
+        TVShow t = extras.getParcelable("TVShow");
+        mTVShowSearch = ts;
+        if (t == null && ts != null) {
             setTitle(ts.getName());
             getTvShowInformation(ts);
+        } else if (t != null && ts != null) {
+            setTitle(ts.getName());
+            setTvShowInfo(t, ts);
         }
 
     }
@@ -81,19 +87,30 @@ public class TvShowActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        DBUtil dbUtil = new DBUtil(this);
+        boolean result = dbUtil.findTvShow(mTVShowSearch.getId());
+
+        menu.setGroupVisible(R.id.action_group_delete, result);
+        menu.setGroupVisible(R.id.action_group_save, !result);
+
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
                 finish();
                 break;
-            default:
-                Toast.makeText(this, "Soon", Toast.LENGTH_SHORT)
-                        .show();
+            case R.id.action_delete:
+                String result = new DBUtil(this).deleteTvShow(mTVShowSearch.getId());
+                Toast.makeText(this, result, Toast.LENGTH_SHORT).show();
         }
         return true;
     }
 
-    public void getTvShowInformation(final TVShowSearch ts) {
+    private void getTvShowInformation(final TVShowSearch ts) {
         TMDBService tmdbService = new TMDBService.Builder().build();
         Call<TVShow> call = tmdbService.getShowInfo(ts.getId());
 
@@ -106,20 +123,8 @@ public class TvShowActivity extends AppCompatActivity {
                             .show();
                     Log.e("URL: ", call.request().url().toString());
                 } else {
-                    TVShow s = response.body();
-                    String releaseDate = "<b>Release date: </b>" + ts.getReleaseDate();
-                    String status = "<b>Status: </b>" + s.getStatus();
-                    String genres = "<b>Genres: </b>" + s.getGenres();
-
-                    tvOverview.setText(s.getOverview());
-                    tvGenres.setText(Html.fromHtml(genres));
-                    tvRelease.setText(Html.fromHtml(releaseDate));
-                    tvStatus.setText(Html.fromHtml(status));
-                    setupRecyclerView((ArrayList<Season>) s.getSeasonList(), ts, s);
-
-                    removeProgressBar();
-                    new ImageGetter(s.getBackdropPath(), "backdrop", imgBackdrop);
-                    new ImageGetter(ts.getPosterPath(), "poster", imgPoster);
+                    TVShow t = response.body();
+                    setTvShowInfo(t, ts);
                 }
             }
 
@@ -134,7 +139,35 @@ public class TvShowActivity extends AppCompatActivity {
         });
     }
 
-    public void addProgressBar() {
+    private void setTvShowInfo(TVShow t, TVShowSearch ts) {
+        String releaseDate = "<b>Release date: </b>" + ts.getReleaseDate();
+        String status = "<b>Status: </b>" + t.getStatus();
+        String genres = "<b>Genres: </b>" + t.getGenresString();
+
+        for (Season season : t.getSeasonList()) {
+            int num = season.getNumber();
+            String name;
+            if (num == 0) {
+                name = getResources().getString(R.string.special_season);
+            } else {
+                name = getResources().getString(R.string.season);
+                name = name + " " + num;
+            }
+            season.setTempName(name);
+        }
+
+        tvOverview.setText(t.getOverview());
+        tvGenres.setText(Html.fromHtml(genres));
+        tvRelease.setText(Html.fromHtml(releaseDate));
+        tvStatus.setText(Html.fromHtml(status));
+        setupRecyclerView((ArrayList<Season>) t.getSeasonList(), ts, t);
+
+        removeProgressBar();
+        new ImageGetter(t.getBackdropPath(), "backdrop", imgBackdrop);
+        new ImageGetter(ts.getPosterPath(), "poster", imgPoster);
+    }
+
+    private void addProgressBar() {
         mContentView.setVisibility(View.INVISIBLE);
         CoordinatorLayout.LayoutParams params = new CoordinatorLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -146,12 +179,12 @@ public class TvShowActivity extends AppCompatActivity {
         mRootView.addView(mProgressBar);
     }
 
-    public void removeProgressBar() {
+    private void removeProgressBar() {
         mRootView.removeView(mProgressBar);
         mContentView.setVisibility(View.VISIBLE);
     }
 
-    public void setupRecyclerView(final ArrayList<Season> seasonList, final TVShowSearch ts, final TVShow t) {
+    private void setupRecyclerView(final ArrayList<Season> seasonList, final TVShowSearch ts, final TVShow t) {
         SeasonAdapter adapter = new SeasonAdapter(seasonList, getResources());
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         rvSeasons.setAdapter(adapter);

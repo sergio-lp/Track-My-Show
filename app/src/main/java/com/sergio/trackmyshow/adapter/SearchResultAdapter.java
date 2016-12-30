@@ -65,7 +65,6 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
             releaseDate = s.getReleaseDate();
             posterPath = s.getPosterPath();
         }
-
         holder.tvTitle.setText(title);
         holder.tvRelease.setText(releaseDate);
         holder.tvWatched.setText(watched);

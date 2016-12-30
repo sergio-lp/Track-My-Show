@@ -63,11 +63,9 @@ public class DBUtil {
     }
 
     public boolean findMovie(int id) {
-        Cursor c = dbHelper.selectMovie(id);
-        try {
+        try (Cursor c = dbHelper.selectMovie(id)) {
             return c.getCount() >= 1;
         } finally {
-            c.close();
             dbHelper.close();
         }
     }
@@ -103,11 +101,9 @@ public class DBUtil {
     }
 
     public boolean findTvShow(int id) {
-        Cursor c = dbHelper.selectShow(id);
-        try {
+        try (Cursor c = dbHelper.selectShow(id)) {
             return c.getCount() >= 1;
         } finally {
-            c.close();
             dbHelper.close();
         }
     }
@@ -132,5 +128,27 @@ public class DBUtil {
     public Cursor selectAllTvShows() {
         return dbHelper.selectAllShows();
 
+    }
+
+    public List<Season> selectSeason(int id) {
+        try {
+            return dbHelper.selectSeasons(id);
+        } finally {
+            dbHelper.close();
+        }
+    }
+
+    public String deleteTvShow(int id){
+        try {
+            int result = dbHelper.deleteTvShow(id);
+
+            if (result == 1) {
+                return success;
+            } else {
+                return fail;
+            }
+        } finally {
+            dbHelper.close();
+        }
     }
 }

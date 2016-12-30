@@ -53,6 +53,7 @@ public class MoviesFragment extends Fragment {
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT);
+
             LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
             SearchResultAdapter adapter = new SearchResultAdapter(resultList, getActivity());
             RecyclerView rvMovies = new RecyclerView(getActivity());

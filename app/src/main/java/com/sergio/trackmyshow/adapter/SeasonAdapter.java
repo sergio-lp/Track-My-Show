@@ -1,6 +1,5 @@
 package com.sergio.trackmyshow.adapter;
 
-import android.content.Context;
 import android.content.res.Resources;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -33,15 +32,7 @@ public class SeasonAdapter extends RecyclerView.Adapter<SeasonAdapter.SeasonVH> 
     @Override
     public void onBindViewHolder(SeasonVH holder, int position) {
         Season s = seasonList.get(position);
-        int num = s.getNumber();
-        String name;
-        if (num == 0) {
-            name = resources.getString(R.string.special_season);
-        } else {
-            name = resources.getString(R.string.season);
-            name = name + " " + num;
-        }
-        s.setTempName(name);
+
         String epCount = s.getEpisodeCount() + " " + resources.getString(R.string.episodes);
         String releaseDate = s.getAirDate();
         String posterPath = s.getPosterPath();

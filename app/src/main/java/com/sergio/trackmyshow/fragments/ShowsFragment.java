@@ -22,6 +22,7 @@ import com.sergio.trackmyshow.R;
 import com.sergio.trackmyshow.activities.TvShowActivity;
 import com.sergio.trackmyshow.adapter.RecyclerViewItemClick;
 import com.sergio.trackmyshow.adapter.SearchResultAdapter;
+import com.sergio.trackmyshow.models.tmdb.Season;
 import com.sergio.trackmyshow.models.tmdb.TVShow;
 import com.sergio.trackmyshow.models.tmdb.TVShowSearch;
 import com.sergio.trackmyshow.util.DBUtil;
@@ -51,9 +52,6 @@ public class ShowsFragment extends Fragment {
     }
 
     private void setupRecyclerView(final List<TVShow> tvShowList, final List<TVShowSearch> tvShowSearchList) {
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
         SearchResultAdapter adapter = new SearchResultAdapter(tvShowSearchList, getActivity());
         LinearLayoutManager manager = new LinearLayoutManager(getActivity());
 
@@ -72,6 +70,7 @@ public class ShowsFragment extends Fragment {
                 startActivity(i);
             }
         }));
+        mViewGrop.addView(recyclerView);
 
     }
 
@@ -120,8 +119,10 @@ public class ShowsFragment extends Fragment {
                     String genres = c.getString(6);
                     String status = c.getString(7);
 
-                    TVShowSearch ts = new TVShowSearch(id, posterPath, name, releaseDate);
-                    TVShow t = new TVShow(overview, backdropPath, status, genres);
+                    List<Season> seasonList = new DBUtil(getActivity()).selectSeason(id);
+
+                    TVShowSearch ts = new TVShowSearch(id, name, releaseDate, posterPath);
+                    TVShow t = new TVShow(overview, backdropPath, status, seasonList, genres);
                     tvShowSearchList.add(ts);
                     tvShowList.add(t);
                 }
@@ -134,8 +135,8 @@ public class ShowsFragment extends Fragment {
         @Override
         protected void onPostExecute(SparseArrayCompat<List> sparseArray) {
             if (sparseArray.size() >= 2) {
-                List<TVShow> tvShowList = sparseArray.get(0);
-                List<TVShowSearch> tvShowSearchList = sparseArray.get(1);
+                List<TVShowSearch> tvShowSearchList = sparseArray.get(0);
+                List<TVShow> tvShowList = sparseArray.get(1);
                 setupRecyclerView(tvShowList, tvShowSearchList);
 
             } else {

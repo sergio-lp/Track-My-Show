@@ -67,7 +67,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        int currentFragment = mViewPager.getCurrentItem();
         setupViewPager(mViewPager);
+        if (currentFragment != 0) {
+            mViewPager.setCurrentItem(currentFragment);
+        }
     }
 
     private void closeFab(FloatingActionMenu menu) {

@@ -166,10 +166,13 @@ public class SearchActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(Call call, Response response) {
                     SearchResult searchResult = (SearchResult) response.body();
-                    if (searchResult.getResultList().size() >= 1) {
-                        setupRecyclerView(mRootView, searchResult);
-                    } else {
-                        setupEmptyResult(mRootView);
+
+                    if (searchResult != null) {
+                        if (searchResult.getResultList().size() >= 1) {
+                            setupRecyclerView(mRootView, searchResult);
+                        } else {
+                            setupEmptyResult(mRootView);
+                        }
                     }
 
                 }

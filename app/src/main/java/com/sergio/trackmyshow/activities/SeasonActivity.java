@@ -53,6 +53,7 @@ public class SeasonActivity extends AppCompatActivity {
         tvOverview = (TextView) findViewById(R.id.tv_season_overview);
         imgPoster = (ImageView) findViewById(R.id.img_season_poster);
         rvEpisodes = (RecyclerView) findViewById(R.id.rv_season_episodes);
+        addProgressBar();
 
         Bundle extras = getIntent().getExtras();
         List<Season> seasons = extras.getParcelableArrayList("paramSeasonList");
@@ -65,7 +66,6 @@ public class SeasonActivity extends AppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-        addProgressBar();
     }
 
     @Override
@@ -118,6 +118,7 @@ public class SeasonActivity extends AppCompatActivity {
         mProgressBar = new ProgressBar(this);
         mProgressBar.setIndeterminate(true);
         mProgressBar.setLayoutParams(params);
+        mRootView.addView(mProgressBar);
     }
 
     public void removeProgressBar() {
