@@ -1,3 +1,3 @@
 # track-my-show
 
-Android app from getting informed about your favorite movies and TV shows.
+Android app from getting information about your favorite movies and TV shows.
