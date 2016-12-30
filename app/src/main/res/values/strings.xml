@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Track My Show</string>
+    <string name="empty_movies">You haven\'t added any movies to your list.</string>
+    <string name="empty_shows">You haven\'t added any TV shows to your list.</string>
+    <string name="tv_show">TV Show</string>
+    <string name="movie">Movie</string>
+    <string name="about">About</string>
+    <string name="movies">Movies</string>
+    <string name="tv_shows">TV Shows</string>
+    <string name="search">Search</string>
+    <string name="search_movie">Search by movie name…</string>
+    <string name="search_show">Search by TV show name…</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="no_results">No results found :(</string>
+    <string name="mark_as_watched">Mark as watched</string>
+    <string name="minutes">minutes</string>
+    <string name="special_season">Special Season</string>
+    <string name="season">Season</string>
+    <string name="episodes">episodes</string>
+    <string name="success">Done!</string>
+    <string name="error">Oh no! An error has occurred.</string>
+    <string name="mark_as_unwatched">Mark as unwatched</string>
+    <string name="episode_watched">Episode marked as watched</string>
+    <string name="episode_unwatched">Episode marked as unwatched</string>
+</resources>
