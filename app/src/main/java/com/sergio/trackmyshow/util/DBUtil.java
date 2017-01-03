@@ -65,25 +65,16 @@ public class DBUtil {
     public boolean findMovie(int id) {
         try (Cursor c = dbHelper.selectMovie(id)) {
             return c.getCount() >= 1;
-        } finally {
-            dbHelper.close();
         }
     }
 
     public boolean findMovieStatus(int id) {
         if (findMovie(id)) {
-            try (Cursor c = dbHelper.selectMovie(id)) {
-                c.moveToNext();
-                return c.getInt(13) == 1;
-            } finally {
-                dbHelper.close();
-            }
+            Cursor c = dbHelper.selectMovie(id);
+            c.moveToNext();
+            return c.getInt(13) == 1;
         } else {
-            try {
-                return false;
-            } finally {
-                dbHelper.close();
-            }
+            return false;
         }
     }
 
@@ -138,7 +129,7 @@ public class DBUtil {
         }
     }
 
-    public String deleteTvShow(int id){
+    public String deleteTvShow(int id) {
         try {
             int result = dbHelper.deleteTvShow(id);
 

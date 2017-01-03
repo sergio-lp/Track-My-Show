@@ -130,7 +130,6 @@ public class TvShowActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<TVShow> call, Throwable t) {
-                System.out.println("error");
                 Toast.makeText(TvShowActivity.this, "Error: " + t.getLocalizedMessage(),
                         Toast.LENGTH_SHORT)
                         .show();

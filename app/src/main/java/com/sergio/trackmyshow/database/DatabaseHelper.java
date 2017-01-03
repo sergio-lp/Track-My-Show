@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.transition.Explode;
 import android.util.Log;
 
 import com.sergio.trackmyshow.models.tmdb.Episode;
@@ -22,14 +21,16 @@ import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DB_NAME = "trackmyshow";
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 4;
     private static final String MOVIES = "movies";
     private static final String TV_SHOWS = "tv_shows";
     private static final String SEASONS = "seasons";
     private static final String EPISODES = "episodes";
+    private SQLiteDatabase database;
 
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
+        this.database = this.getWritableDatabase();
     }
 
     @Override
@@ -46,8 +47,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 " FOREIGN KEY (show_id) REFERENCES " + TV_SHOWS + "(show_id));";
 
         String sqlEpisodes = "CREATE TABLE " + EPISODES + "(id integer primary key autoincrement, ep_num int not null, " +
-                "name text not null, watched boolean, season_id int, FOREIGN KEY (season_id) REFERENCES " +
-                "" + TV_SHOWS + "(season_id));";
+                "name text not null, watched boolean, season_id int, show_id int, FOREIGN KEY (season_id) REFERENCES " +
+                "" + SEASONS + "(season_id), FOREIGN KEY (show_id) REFERENCES " + TV_SHOWS + "(show_id));";
 
 
         sqLiteDatabase.execSQL(sqlMovies);
@@ -70,8 +71,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public long insertMovie(MovieSearch ms, Movie m) {
-        SQLiteDatabase db = this.getWritableDatabase();
-
         Cursor c = selectMovie(ms.getId());
 
         ContentValues cv = new ContentValues();
@@ -93,7 +92,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         long res = -1;
         if (c.getCount() == 0) {
             try {
-                res = db.insertOrThrow(MOVIES, null, cv);
+                res = database.insertOrThrow(MOVIES, null, cv);
             } catch (SQLException e) {
                 Log.e("insertMovie Error:", e.getLocalizedMessage());
             }
@@ -104,25 +103,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public Cursor selectAllMovies() {
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        return db.query(MOVIES, null, null, null, null, null, null);
+        return database.query(MOVIES, null, null, null, null, null, null);
     }
 
     public Cursor selectMovie(int id) {
-        SQLiteDatabase db = this.getWritableDatabase();
         String args[] = {Integer.toString(id)};
-        return db.query(MOVIES, null, "movie_id = ?", args, null, null, null);
+        return database.query(MOVIES, null, "movie_id = ?", args, null, null, null);
     }
 
     public int deleteMovie(int id) {
-        SQLiteDatabase db = this.getWritableDatabase();
         String args[] = {Integer.toString(id)};
-        return db.delete(MOVIES, "movie_id = ?", args);
+        return database.delete(MOVIES, "movie_id = ?", args);
     }
 
     private int updateMovie(MovieSearch ms, Movie m) {
-        SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("movie_id", ms.getId());
         cv.put("title", ms.getTitle());
@@ -139,11 +133,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cv.put("runtime", m.getRuntime());
         cv.put("watched", m.isWatched());
         String args[] = {Integer.toString(ms.getId())};
-        return db.update(MOVIES, cv, "movie_id = ?", args);
+        return database.update(MOVIES, cv, "movie_id = ?", args);
     }
 
     public long insertShow(TVShowSearch ts, TVShow t, List<SeasonInfo> seasonInfoList) {
-        SQLiteDatabase db = this.getWritableDatabase();
         List<Season> seasonList = t.getSeasonList();
 
         ContentValues cv = new ContentValues();
@@ -157,12 +150,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cv.put("status", t.getStatus());
 
         try {
-            db.insertOrThrow(TV_SHOWS, null, cv);
+            database.insertOrThrow(TV_SHOWS, null, cv);
         } catch (SQLException e) {
             Log.e("insertShow Error: ", e.getLocalizedMessage());
             return -1;
+        } finally {
+            cv.clear();
         }
-        cv.clear();
 
         for (int i = 0; i < t.getSeasonList().size(); i++) {
             Season s = seasonList.get(i);
@@ -177,12 +171,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             cv.put("show_id", ts.getId());
 
             try {
-                db.insertOrThrow(SEASONS, null, cv);
+                database.insertOrThrow(SEASONS, null, cv);
             } catch (SQLException e) {
                 Log.e("insertSeason Error: ", e.getLocalizedMessage());
                 return -1;
+            } finally {
+                cv.clear();
             }
-            cv.clear();
         }
         cv.clear();
 
@@ -194,9 +189,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 cv.put("name", e.getName());
                 cv.put("watched", e.isWatched());
                 cv.put("season_id", s.getId());
-
+                cv.put("show_id", ts.getId());
                 try {
-                    db.insertOrThrow(EPISODES, null, cv);
+                    database.insertOrThrow(EPISODES, null, cv);
                 } catch (SQLException ex) {
                     Log.e("insertEpisode Error: ", ex.getLocalizedMessage());
                     return -1;
@@ -208,26 +203,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public Cursor selectAllShows() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        return db.query(false, TV_SHOWS, null, null, null, null, null, null, null, null);
+        return database.query(false, TV_SHOWS, null, null, null, null, null, null, null, null);
     }
 
     public Cursor selectShow(int id) {
-        SQLiteDatabase db = this.getWritableDatabase();
         String[] args = {Integer.toString(id)};
-        return db.query(false, TV_SHOWS, null, "show_id = ?", args, null, null, null, null);
+        return database.query(false, TV_SHOWS, null, "show_id = ?", args, null, null, null, null);
     }
 
-    /**
-     * String sqlSeasons = "CREATE TABLE " + SEASONS + "(season_id int primary key, number int not null," +
-     * " air_date text, poster_path text, episode_count int, name text, overview text, show_id int," +
-     * " FOREIGN KEY (show_id) REFERENCES " + TV_SHOWS + "(show_id));";
-     **/
-
     public List<Season> selectSeasons(int tvId) {
-        SQLiteDatabase db = this.getWritableDatabase();
         String[] args = {Integer.toString(tvId)};
-        Cursor c = db.query(SEASONS, null, "show_id = ?", args, null, null, null);
+        Cursor c = database.query(SEASONS, null, "show_id = ?", args, null, null, null);
 
         List<Season> seasonList = new ArrayList<>();
         if (c.getCount() >= 1) {
@@ -246,33 +232,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         c.close();
         return seasonList;
+
     }
 
     public boolean getEpisodeStatus(Episode e, int seasonId) {
-        SQLiteDatabase db = this.getWritableDatabase();
         String[] args = {Integer.toString(seasonId), Integer.toString(e.getNumber())};
-        Cursor c = db.query(EPISODES, null, "season_id = ? and ep_num = ?", args, null, null, null, null);
-        try {
+        try (Cursor c = database.query(EPISODES, null, "season_id = ? and ep_num = ?", args, null, null, null, null)) {
             return c.moveToNext() && c.getInt(3) == 1;
-        } finally {
-            db.close();
-            c.close();
         }
     }
 
     public int updateEpisode(Episode ep, int seasonId) {
-        SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("watched", ep.isWatched());
         String[] args = {Integer.toString(ep.getNumber()), Integer.toString(seasonId)};
-
-        return db.update(EPISODES, cv, "ep_num = ? and season_id = ?", args);
+        return database.update(EPISODES, cv, "ep_num = ? and season_id = ?", args);
 
     }
 
     public int deleteTvShow(int id) {
-        SQLiteDatabase db = this.getWritableDatabase();
         String args[] = {Integer.toString(id)};
-        return db.delete(TV_SHOWS, "show_id = ?", args);
+        database.delete(SEASONS, "show_id = ?", args);
+        int r = database.delete(EPISODES, "show_id = ?", args);
+        return database.delete(TV_SHOWS, "show_id = ?", args);
     }
 }

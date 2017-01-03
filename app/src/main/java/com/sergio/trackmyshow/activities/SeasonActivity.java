@@ -127,7 +127,6 @@ public class SeasonActivity extends AppCompatActivity {
     }
 
     public void setupRecyclerView(TVShowSearch tvShowSearch, TVShow tvShow, List<Season> seasonList, List<Episode> episodeList) {
-        System.out.println(tvShow.getSeasonList() + " <<<-----------");
         EpisodeAdapter adapter = new EpisodeAdapter(tvShowSearch, tvShow, episodeList, seasonList, this, selectedSeasonId);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         rvEpisodes.setAdapter(adapter);
